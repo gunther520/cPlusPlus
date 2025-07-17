@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I./include/boost_1_88_0 -pthread
+CXXFLAGS := -g -O0 -fsanitize=address -Wall -Wextra -std=c++17 -I./include -pthread
 LDFLAGS := -L./lib/boost_1_88_0/stage/lib -lboost_thread -lboost_system -lboost_filesystem -pthread -Wl,-rpath=$(PWD)/lib/boost_1_88_0/stage/lib
 
 # Directories
@@ -18,7 +18,7 @@ TARGET := $(BIN_DIR)/app
 
 # Default target
 all: $(TARGET)
-	./$(TARGET)
+
 
 # Link objects to create binary with rpath
 $(TARGET): $(OBJS)

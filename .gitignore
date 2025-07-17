@@ -1,6 +1,6 @@
-/.devcontainer
 /.github
 /bin
-/include
+/include/boost_1_88_0
 /lib
 /obj
+.vscode/settings.json
