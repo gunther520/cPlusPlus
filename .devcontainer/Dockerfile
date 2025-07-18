@@ -1,18 +1,21 @@
 FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-22.04
 
-ARG REINSTALL_CMAKE_VERSION_FROM_SOURCE="none"
+# Install system-level libraries
+RUN apt update && apt install -y \
+    libstdc++6 \
+    libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Optionally install the cmake for vcpkg
-COPY ./reinstall-cmake.sh /tmp/
+# Set working directory
+WORKDIR /app
 
-RUN if [ "${REINSTALL_CMAKE_VERSION_FROM_SOURCE}" != "none" ]; then \
-        chmod +x /tmp/reinstall-cmake.sh && /tmp/reinstall-cmake.sh ${REINSTALL_CMAKE_VERSION_FROM_SOURCE}; \
-    fi \
-    && rm -f /tmp/reinstall-cmake.sh
+# Copy your binary and Boost dynamic libs into the image
+COPY bin/app ./app
+COPY lib/boost_1_88_0/stage/lib/ /usr/local/lib/
 
-# [Optional] Uncomment this section to install additional vcpkg ports.
-# RUN su vscode -c "${VCPKG_ROOT}/vcpkg install <your-port-name-here>"
+# Set runtime linker path to include custom boost location
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
-# [Optional] Uncomment this section to install additional packages.
-# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-#     && apt-get -y install --no-install-recommends <your-package-list-here>
+# Run the app by default
+CMD ["./app"]
+

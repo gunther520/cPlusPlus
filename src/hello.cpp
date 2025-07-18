@@ -31,13 +31,18 @@ int main(int argc, char *argv[])
   // boost::thread my_thread(&hello_world);
   // 等待執行緒完成工作
   // my_thread.join();
-  AvlTree<int> tree(0); // or prompt user for initial value
+  AvlTree<int> tree; // or prompt user for initial value
   int option, value;
 
   while (true)
   {
     showMenu();
-    cin >> option;
+    while (!(std::cin >> option))
+    {
+      std::cin.clear();                                                   // clear fail state
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // discard input
+      std::cout << "Invalid input. Please enter a number: ";
+    }
     cout << '\n';
     switch (option)
     {
@@ -66,9 +71,10 @@ int main(int argc, char *argv[])
       tree.printTree(tree.root);
       break;
     case 6:
-
       hello_world();
       return 0;
+    default:
+      cout << "No such option\n";
     }
   }
 

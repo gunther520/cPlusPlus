@@ -39,6 +39,7 @@ public:
     void printTree(AvlNode<T> *root, int d = 0);
     AvlNode<T> *root;
     AvlTree(T val);
+    AvlTree();
     ~AvlTree();
     bool search(T val);
     void insert(T val);
@@ -81,6 +82,11 @@ template <typename T>
 AvlTree<T>::AvlTree(T val)
 {
     root = new AvlNode(val);
+}
+
+template <typename T>
+AvlTree<T>::AvlTree() : root(nullptr)
+{
 }
 
 template <typename T>
@@ -175,6 +181,10 @@ bool AvlTree<T>::insertion(AvlNode<T> *&rt, T v)
 template <typename T>
 void AvlTree<T>::insert(T v)
 {
+    if (root == nullptr)
+    {
+        root = new AvlNode(v);
+    }
     insertion(root, v);
 }
 
