@@ -13,66 +13,64 @@ void hello_world()
   return;
 }
 
+void showMenu()
+{
+  cout << "\n==== AVL Tree Menu ====\n";
+  cout << "1: Insert\n";
+  cout << "2: Delete\n";
+  cout << "3: Search\n";
+  cout << "4: Print In-Order\n";
+  cout << "5: Print Tree Structure\n";
+  cout << "6: Exit\n";
+  cout << "Select option: ";
+}
+
 int main(int argc, char *argv[])
 {
   // 開始一條使用 "hello_world" function 的新執行緒
   // boost::thread my_thread(&hello_world);
   // 等待執行緒完成工作
   // my_thread.join();
+  AvlTree<int> tree(0); // or prompt user for initial value
+  int option, value;
 
-  // 1. Create tree and insert a set of values
-  AvlTree<int> tree(10);
-  tree.insert(20); // RR case
-  tree.insert(30); // triggers RR rotation
-  tree.insert(25); // RL case (should trigger RL rotation)
-  tree.insert(5);  // LL case
-  tree.insert(2);  // triggers LL rotation
-  tree.insert(8);  // LR case (should trigger LR rotation)
-  tree.insert(15); // No rotation needed
-  tree.insert(12); // Additional inserts to mix things up
-
-  cout << "In-order traversal after inserting (should be sorted): ";
-  tree.printInOrder(tree.root); // root is private; for test, make it public or use a getter
-  cout << "\n\nTree structure:\n";
-  tree.printTree(tree.root);
-
-  // 2. Search test (should find existing and not find non-existing)
-  cout << "\nSearching for 15: " << (tree.search(15) ? "found" : "not found") << endl;
-  cout << "Searching for 99: " << (tree.search(99) ? "found" : "not found") << endl;
-
-  // 3. Remove a leaf
-  tree.remove(2); // leaf
-  cout << "\nAfter removing leaf 2:\n";
-  tree.printTree(tree.root);
-
-  // 4. Remove a node with one child
-  tree.remove(8); // one child
-  cout << "\nAfter removing 8 (node with one child):\n";
-  tree.printTree(tree.root);
-
-  // 5. Remove node with two children
-  tree.remove(20); // has children, in-order successor/predecessor used
-  cout << "\nAfter removing 20 (node with two children):\n";
-  tree.printTree(tree.root);
-
-  // 6. Remove root (possibly challenging rebalance)
-  tree.remove(10);
-  cout << "\nAfter removing 10 (root):\n";
-  tree.printTree(tree.root);
-
-  // 7. Stress test: Insert elements to cause deep right-left then remove
-  AvlTree<int> stressTree(100);
-  for (int v : {150, 120, 110, 130, 170, 160, 180, 140, 115, 125})
+  while (true)
   {
-    stressTree.insert(v);
+    showMenu();
+    cin >> option;
+    cout << '\n';
+    switch (option)
+    {
+    case 1:
+      cout << "Value to insert: ";
+      cin >> value;
+      tree.insert(value);
+      break;
+    case 2:
+      cout << "Value to delete: ";
+      cin >> value;
+      tree.remove(value);
+      break;
+    case 3:
+      cout << "Value to search: ";
+      cin >> value;
+      cout << (tree.search(value) ? "Found" : "Not found") << endl;
+      break;
+    case 4:
+      cout << "In-order: ";
+      tree.printInOrder(tree.root);
+      cout << endl;
+      break;
+    case 5:
+      cout << "Tree structure:\n";
+      tree.printTree(tree.root);
+      break;
+    case 6:
+
+      hello_world();
+      return 0;
+    }
   }
-  cout << "\nStress test tree:\n";
-  tree.printTree(stressTree.root);
 
-  stressTree.remove(130);
-  cout << "\nAfter removing 130:\n";
-  tree.printTree(stressTree.root);
-
-  hello_world();
   return 0;
 }
