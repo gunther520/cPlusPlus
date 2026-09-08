@@ -38,7 +38,7 @@ Your CPU’s predictor is very good. The demo needs a hard-to-predict pattern, n
 
 - A mispredicted branch throws away in-flight work. Cost is tens of cycles, not one.
 - Sorting does not make the *algorithm* better at counting; it makes the *machine* better at guessing.
-- Compilers emit `cmov` or SIMD compares when they can. A visible `if` in C++ is not always a `jcc` in asm — check Godbolt if the gap is tiny.
+- Compilers emit `cmov` or SIMD compares when they can. A tiny `if (++c)` is often rewritten as branchless code at `-O2`, which would hide this unit. The example therefore calls a `noinline` function inside the `if` so you still get a real unpredictable branch. Check Godbolt if you delete that call.
 
 ## Wrong conclusions
 

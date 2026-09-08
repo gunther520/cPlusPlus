@@ -12,11 +12,17 @@ constexpr int kWarmup = 6;
 // TODO(unit-07): try threshold 2, 128, 250 on unsorted data.
 constexpr int kThreshold = 128;
 
+// Opaque so the compiler cannot turn the if into cmov/SIMD. A real
+// unpredictable branch to an extra call is what we want to measure.
+__attribute__((noinline)) static void hit(std::uint64_t& c, std::uint8_t v) {
+  c += v;
+}
+
 static std::uint64_t count_branchy(std::uint8_t const* p, int n, int thr) {
   std::uint64_t c = 0;
   for (int i = 0; i < n; ++i) {
     if (p[i] > thr) {
-      ++c;
+      hit(c, p[i]);
     }
   }
   ll::do_not_optimize(c);
@@ -26,7 +32,8 @@ static std::uint64_t count_branchy(std::uint8_t const* p, int n, int thr) {
 static std::uint64_t count_branchless(std::uint8_t const* p, int n, int thr) {
   std::uint64_t c = 0;
   for (int i = 0; i < n; ++i) {
-    c += static_cast<std::uint64_t>(p[i] > thr);
+    // Always do the work; the multiply is a mask (0 or 1).
+    c += static_cast<std::uint64_t>(p[i]) * static_cast<std::uint64_t>(p[i] > thr);
   }
   ll::do_not_optimize(c);
   return c;

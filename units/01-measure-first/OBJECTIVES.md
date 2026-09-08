@@ -33,8 +33,8 @@ taskset -c 0 make run-01
 
 ## What you should see
 
-- One-shot lines jump around. The first one is often a clear outlier (cold I-cache, page faults, frequency boost).
-- The percentile table is stable across runs on an idle core. **p99 is higher than p50**; that gap *is* the latency story.
+- One-shot lines **may** jump around. The first is often an outlier (cold I-cache, page faults, frequency boost). On a quiet isolated core they can look almost equal — that is not a failure. Read Case B.
+- The percentile table is more stable across runs on an idle core. **p99 is higher than p50**; that gap *is* the latency story.
 - `rdtsc` (calibrated to ns) tracks `steady_clock` on the same work, but is not a legal wall-clock. It can go backwards across cores and is not a `clock_gettime` replacement.
 
 Absolute nanoseconds will differ on your CPU. Compare *shape* (scatter, p99/p50), not the exact number.

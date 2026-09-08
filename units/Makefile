@@ -36,7 +36,7 @@ help:
 	@echo "  make run-01       build and run one unit"
 	@echo "  make run-02 OPT=0 same source, no optimizer"
 	@echo "  make run-02 OPT=3 same source, -O3"
-	@echo "  make clean"
+	@echo "  make clean        required after changing OPT (output names ignore OPT)"
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)

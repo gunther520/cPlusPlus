@@ -10,7 +10,7 @@
 ## Predict
 
 1. `c[i] = a[i]+b[i]` with possible alias versus `__restrict__` pointers — who wins at `-O3`?
-2. A loop with `if (mask[i]) acc += a[i]` versus a branchless `acc += a[i] * mask[i]`.
+2. A loop with `if (mask[i]) acc += a[i]` versus a branchless `acc += a[i] * mask[i]` — this is the comparison that usually moves a lot.
 3. Will `-O0` show any SIMD gap? (It should not.)
 
 ## Run
@@ -32,9 +32,7 @@ Or Godbolt with `-O3 -march=native`.
 
 ## What you should see
 
-- At `-O3`, the clean contiguous add should beat the may-alias version and the branchy version.
-- `restrict` lets the compiler emit SIMD stores to `c` without fearing `c` overlaps `a` or `b`.
-- Branchy accumulation often stays scalar or uses a slower masked path.
+- At `-O3`, the **branchless** masked sum should beat the branchy one (often several times). GCC may already vectorize a plain `c[i]=a[i]+b[i]` *with a runtime overlap check*, so Case A vs B can look close — that is loop versioning, not “restrict is useless.” Read the asm.
 - At `-O0`, all cases look similar and terrible. Vectorization is an optimizer feature.
 
 Gaps vary by CPU (`-march=native` matters). If everything is already vectorized, read the asm; the lesson still holds.

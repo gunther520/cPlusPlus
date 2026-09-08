@@ -9,7 +9,7 @@
 
 ## Predict
 
-1. `sink(std::string)` by value versus `sink(std::string_view)` on a 64-byte payload: who wins?
+1. `sink(std::string)` by value versus `sink(std::string_view)` on a 256-byte payload: who wins?
 2. Appending one character `kN` times without `reserve` versus with `reserve(kN)`.
 3. Is a 3-character string heap-allocated on libstdc++? Is a 32-character string?
 

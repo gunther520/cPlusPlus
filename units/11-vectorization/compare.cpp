@@ -9,14 +9,19 @@ constexpr int kN = 1 << 20;
 constexpr int kSamples = 50;
 constexpr int kWarmup = 5;
 
-static void add_maybe_alias(float* a, float* b, float* c, int n) {
+// noinline: if these are inlined, the compiler sees three distinct
+// std::vector buffers and vectorizes both cases the same way.
+__attribute__((noinline)) static void add_maybe_alias(float* a, float* b,
+                                                      float* c, int n) {
   for (int i = 0; i < n; ++i) {
     c[i] = a[i] + b[i];
   }
 }
 
-static void add_restrict(float* __restrict__ a, float* __restrict__ b,
-                         float* __restrict__ c, int n) {
+__attribute__((noinline)) static void add_restrict(float* __restrict__ a,
+                                                   float* __restrict__ b,
+                                                   float* __restrict__ c,
+                                                   int n) {
   for (int i = 0; i < n; ++i) {
     c[i] = a[i] + b[i];
   }

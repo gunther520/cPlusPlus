@@ -1,5 +1,6 @@
 #include "bench.hpp"
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -11,31 +12,39 @@ constexpr int kSamples = 80;
 constexpr int kWarmup = 8;
 
 struct Base {
+  explicit Base(std::int64_t delta) : delta(delta) {}
   virtual ~Base() = default;
   virtual std::int64_t tick(std::int64_t x) const = 0;
+  std::int64_t delta;
 };
 
 struct TypeA final : Base {
-  std::int64_t tick(std::int64_t x) const override { return x + 1; }
+  using Base::Base;
+  std::int64_t tick(std::int64_t x) const override { return x + delta; }
 };
 
 struct TypeB final : Base {
-  std::int64_t tick(std::int64_t x) const override { return x + 2; }
+  using Base::Base;
+  std::int64_t tick(std::int64_t x) const override { return x + delta; }
 };
 
 template <typename Derived>
 struct CrtpBase {
+  explicit CrtpBase(std::int64_t delta) : delta(delta) {}
   std::int64_t tick(std::int64_t x) const {
     return static_cast<Derived const*>(this)->tick_impl(x);
   }
+  std::int64_t delta;
 };
 
 struct CrtpA : CrtpBase<CrtpA> {
-  std::int64_t tick_impl(std::int64_t x) const { return x + 1; }
+  using CrtpBase<CrtpA>::CrtpBase;
+  std::int64_t tick_impl(std::int64_t x) const { return x + delta; }
 };
 
 struct CrtpB : CrtpBase<CrtpB> {
-  std::int64_t tick_impl(std::int64_t x) const { return x + 2; }
+  using CrtpBase<CrtpB>::CrtpBase;
+  std::int64_t tick_impl(std::int64_t x) const { return x + delta; }
 };
 
 int main() {
@@ -46,24 +55,34 @@ int main() {
   objs.reserve(static_cast<std::size_t>(kN));
   for (int i = 0; i < kN; ++i) {
     // TODO(unit-08): use only TypeA here and see if virtual Case A speeds up.
+    std::int64_t d = 1 + (i & 3);
     if ((i & 1) == 0) {
-      objs.emplace_back(std::make_unique<TypeA>());
+      objs.emplace_back(std::make_unique<TypeA>(d));
     } else {
-      objs.emplace_back(std::make_unique<TypeB>());
+      objs.emplace_back(std::make_unique<TypeB>(d));
     }
   }
 
-  std::vector<CrtpA> as(static_cast<std::size_t>(kN / 2));
-  std::vector<CrtpB> bs(static_cast<std::size_t>(kN / 2));
+  std::vector<CrtpA> as;
+  std::vector<CrtpB> bs;
+  as.reserve(static_cast<std::size_t>(kN / 2));
+  bs.reserve(static_cast<std::size_t>(kN / 2));
+  for (int i = 0; i < kN; ++i) {
+    std::int64_t d = 1 + (i & 3);
+    if ((i & 1) == 0) {
+      as.emplace_back(d);
+    } else {
+      bs.emplace_back(d);
+    }
+  }
 
   std::vector<std::function<std::int64_t(std::int64_t)>> fns;
   fns.reserve(static_cast<std::size_t>(kN));
   for (int i = 0; i < kN; ++i) {
-    if ((i & 1) == 0) {
-      fns.emplace_back([](std::int64_t x) { return x + 1; });
-    } else {
-      fns.emplace_back([](std::int64_t x) { return x + 2; });
-    }
+    std::int64_t d = 1 + (i & 3);
+    // Capture a fat object so std::function likely heap-allocates the callable.
+    std::array<std::uint64_t, 8> pad{{0, 1, 2, 3, 4, 5, 6, 7}};
+    fns.emplace_back([d, pad](std::int64_t x) { return x + d + static_cast<std::int64_t>(pad[0]); });
   }
 
   auto virt = ll::bench(
@@ -102,7 +121,7 @@ int main() {
       },
       kSamples, kWarmup);
   ll::print_stats("case C (std::function)", fn);
-  ll::print_speedup("virtual", virt, "std::function", fn);
+  ll::print_speedup("std::function", fn, "virtual", virt);
 
   std::cout << "\nIndirect calls block inlining. CRTP is a direct call.\n";
   return 0;

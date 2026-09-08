@@ -2,26 +2,27 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 constexpr int kIters = 200000;
 constexpr int kSamples = 150;
 constexpr int kWarmup = 15;
 constexpr int kAddIters = 2000000;
 
-static std::uint64_t burn_dead(int n) {
+static std::uint64_t burn_dead(std::uint32_t const* p, int n) {
   std::uint64_t sum = 0;
   for (int i = 0; i < n; ++i) {
-    sum += static_cast<std::uint64_t>(i);
+    sum += p[i];
   }
   // Result is returned but the caller ignores it. At -O2 the whole
   // function can disappear if the compiler can prove nothing else uses it.
   return sum;
 }
 
-static std::uint64_t burn_live(int n) {
+static std::uint64_t burn_live(std::uint32_t const* p, int n) {
   std::uint64_t sum = 0;
   for (int i = 0; i < n; ++i) {
-    sum += static_cast<std::uint64_t>(i);
+    sum += p[i];
   }
   // TODO(unit-02): comment this line out, rebuild with OPT=2, watch Case B collapse.
   ll::do_not_optimize(sum);
@@ -40,20 +41,26 @@ int main() {
   ll::print_header("Unit 02 — compiler hot path");
   std::cout << "loop iters = " << kIters << "\n\n";
 
+  std::vector<std::uint32_t> data(static_cast<std::size_t>(kIters));
+  for (int i = 0; i < kIters; ++i) {
+    data[static_cast<std::size_t>(i)] = static_cast<std::uint32_t>(i + 1);
+  }
+
   auto a = ll::bench(
-      [] {
-        (void)burn_dead(kIters);
+      [&] {
+        (void)burn_dead(data.data(), kIters);
       },
       kSamples, kWarmup);
   ll::print_stats("case A (result unused)", a);
 
   auto b = ll::bench(
-      [] {
-        (void)burn_live(kIters);
+      [&] {
+        (void)burn_live(data.data(), kIters);
       },
       kSamples, kWarmup);
   ll::print_stats("case B (do_not_optimize)", b);
-  ll::print_speedup("unused result", a, "kept live", b);
+  ll::print_speedup("kept live (real work)", b, "unused result (DCE)", a);
+  std::cout << "(at -O2 a ratio >> 1 means the unused loop was deleted)\n";
 
   std::cout << "\n";
   volatile int seed = 1;  // volatile so -O2 cannot constant-fold the whole add loop

@@ -38,8 +38,8 @@ Or paste the functions into https://godbolt.org/ (g++, `-O2`).
 
 ## What you should see
 
-- **`-O0`:** Case A and Case B look similar. The compiler is a translator, not an optimizer.
-- **`-O2`:** Case A collapses toward empty (often tens of ns or less for the whole call). Case B still does the loop. That is dead-code elimination, not a faster algorithm.
+- **`-O0`:** Case A and Case B both actually execute the loop. Rankings can look odd or flipped; that is why `-O0` is the wrong place to learn performance.
+- **`-O2`:** Case A collapses toward empty (often tens of ns — that is *timer overhead*, not 200k adds). Case B still walks the array. That is dead-code elimination, not a faster algorithm.
 - The noinline add loop stays visibly more expensive than the inlined one at `-O2`. At `-O0` both are slow because *everything* is a call and there is no register allocation worth mentioning.
 
 ## Why
