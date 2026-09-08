@@ -7,6 +7,22 @@
 - See why `rdtsc` and `std::chrono::steady_clock` disagree, and when each is useful.
 - Use `ll::do_not_optimize` so the compiler cannot delete the timed work.
 
+## Constants in `compare.cpp`
+
+None of these are "the latency of a real system." They only size the demo.
+
+| Name | Value | Why that number |
+|------|-------|-----------------|
+| `kWork` | 250000 | One `burn` call lasts ~0.1–1 ms so you are timing the loop, not the clock. |
+| `kOneShotRuns` | 8 | Enough Case A lines to see scatter without flooding the terminal. |
+| `kSamples` | 200 | Need a pile of samples or "p99" is just the single slowest run. |
+| `kWarmup` | 20 | Throw away cold-start (page faults, I-cache, CPU coming out of idle). |
+| `kMix64` / `kMix32` | `0x9e3779b9…` | Traditional golden-ratio hash bits (`2^n / φ`). Ugly on purpose so `-O2` cannot algebraically delete the loop. |
+| `kLcgMul` / `kLcgAdd` | 1103515245, 12345 | Classic `rand()` LCG. Fills the array with a non-linear pattern. |
+| `<< 6`, `>> 2` | — | Mix high and low bits of `sum` each iteration (not a "real" hash). |
+
+`ll::do_not_optimize(sum)` is not a number: it tells the compiler "this value escapes," so the loop must actually run.
+
 ## Predict
 
 Before you run anything:
