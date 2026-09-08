@@ -1,1 +1,0 @@
-const int AGE = 10000;

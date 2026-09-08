@@ -1,6 +1,7 @@
-/.github
 /bin
-/include/boost_1_88_0
-/lib
 /obj
+units/bin
 .vscode/settings.json
+*.o
+*.out
+*.exe
