@@ -54,3 +54,7 @@ This is not a full matching engine. It is the socket those engines sit on: a wai
 - Huge ring: extra memory, better decoupling, possibly worse cache if the working set is cold.
 
 Then add a `std::string` payload (or a 64-byte struct) instead of `int`. Copy cost (Unit 06) will start to dominate the queue mechanics. That is the right time to pass indices into a preallocated arena instead of moving big objects through the ring.
+
+## Next
+
+Units 13–15 add syscalls, spin-vs-sleep, and SIMD intrinsics. The **hands-on project** is [capstone/ASSIGNMENT.md](../../capstone/ASSIGNMENT.md): a mini matcher that should reuse this ring.
