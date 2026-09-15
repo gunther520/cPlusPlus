@@ -2,7 +2,7 @@
 
 A unit-based course for people who already write C++ (classes, templates, STL) and want to
 **measure and shape latency** on Linux: cache, allocations, branches, dispatch, atomics, SIMD,
-and a small SPSC ring.
+syscalls, wait policy, and a small SPSC ring — plus a **capstone matcher** you implement yourself.
 
 Each unit is a folder with:
 
@@ -49,7 +49,7 @@ From the repo root: `make run-03`, `make run-02 OPT=0`, etc.
 
 Unit 02 and 08 **must** be compared at `-O0` and `-O2`. Run `make clean` between `OPT` values; the output name does not include the level.
 
-Thread units (04, 10, 12) link `-pthread`.
+Thread units (04, 10, 12, 14) link `-pthread`. Capstone: `make -C capstone help`.
 
 ## Unit map
 
@@ -67,8 +67,13 @@ Thread units (04, 10, 12) link `-pthread`.
 | 10 | [units/10-atomics-and-locks](units/10-atomics-and-locks) | Mutex vs atomic; relaxed vs seq_cst; acq/rel |
 | 11 | [units/11-vectorization](units/11-vectorization) | Aliasing / branches vs restrict + contiguous SIMD |
 | 12 | [units/12-capstone-spsc-loop](units/12-capstone-spsc-loop) | Locked `queue` vs SPSC ring buffer |
+| 13 | [units/13-syscalls-hot-path](units/13-syscalls-hot-path) | Unbuffered `write` vs in-memory log vs no I/O |
+| 14 | [units/14-spin-vs-sleep](units/14-spin-vs-sleep) | Busy spin vs `yield` vs `sleep_for` |
+| 15 | [units/15-simd-intrinsics](units/15-simd-intrinsics) | Scalar add vs SSE2 `_mm_add_ps` vs auto-vec |
 
-Do them in order. Later units reuse the words *cache line*, *p99*, *do_not_optimize*, and *allocate before the event*.
+**Capstone (assignment):** [capstone/ASSIGNMENT.md](capstone/ASSIGNMENT.md) — mini price-time matcher. Run `make -C capstone run-naive`, then edit `capstone/starter/engine.hpp`.
+
+Do the numbered units in order. Later units reuse *cache line*, *p99*, *do_not_optimize*, and *allocate before the event*. The capstone is where they have to show up in one program.
 
 ## Optional Linux tools
 
@@ -96,7 +101,7 @@ Compiler Explorer (https://godbolt.org/) with gcc `-O2` / `-O3 -march=native` is
 
 ## Out of scope (on purpose)
 
-Kernel bypass (DPDK), huge pages, NUMA pinning, SIMD *intrinsics*, and a full order book. After Unit 12 you have the vocabulary to read those. Adding them too early hides the basics (cache, heap, branches) that actually move p99 for most code.
+Kernel bypass (DPDK), huge pages, NUMA pinning, and a production multi-instrument matching engine. Units 13–15 and the capstone are the next rung, not the last.
 
 ## License / intent
 

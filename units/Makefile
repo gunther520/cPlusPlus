@@ -18,14 +18,20 @@ UNITS := \
   09-data-oriented \
   10-atomics-and-locks \
   11-vectorization \
-  12-capstone-spsc-loop
+  12-capstone-spsc-loop \
+  13-syscalls-hot-path \
+  14-spin-vs-sleep \
+  15-simd-intrinsics
 
-PTHREAD_UNITS := 04-false-sharing 10-atomics-and-locks 12-capstone-spsc-loop
+PTHREAD_UNITS := 04-false-sharing 10-atomics-and-locks 12-capstone-spsc-loop \
+  14-spin-vs-sleep
 
 .PHONY: all clean help unit-01 unit-02 unit-03 unit-04 unit-05 unit-06 \
         unit-07 unit-08 unit-09 unit-10 unit-11 unit-12 \
+        unit-13 unit-14 unit-15 \
         run-01 run-02 run-03 run-04 run-05 run-06 \
-        run-07 run-08 run-09 run-10 run-11 run-12
+        run-07 run-08 run-09 run-10 run-11 run-12 \
+        run-13 run-14 run-15
 
 all: $(addprefix $(BIN_DIR)/,$(UNITS))
 
@@ -63,6 +69,9 @@ $(eval $(call UNIT_RULES,09-data-oriented,09))
 $(eval $(call UNIT_RULES,10-atomics-and-locks,10))
 $(eval $(call UNIT_RULES,11-vectorization,11))
 $(eval $(call UNIT_RULES,12-capstone-spsc-loop,12))
+$(eval $(call UNIT_RULES,13-syscalls-hot-path,13))
+$(eval $(call UNIT_RULES,14-spin-vs-sleep,14))
+$(eval $(call UNIT_RULES,15-simd-intrinsics,15))
 
 clean:
 	rm -rf $(BIN_DIR)

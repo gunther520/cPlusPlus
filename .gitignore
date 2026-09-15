@@ -1,6 +1,7 @@
 /bin
 /obj
 units/bin
+capstone/bin
 .vscode/settings.json
 *.o
 *.out
