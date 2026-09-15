@@ -56,3 +56,7 @@ This unit stops at **auto-vectorization**. Hand-written intrinsics and ISA-speci
 `TODO(unit-11)`: in Case A, pass `add_maybe_alias(a, a, c, n)` so `b == a` (still legal) versus `add_maybe_alias(c+1, a, c, n)` overlap (illegal for `restrict`).
 
 Keep Case B honest: only use `restrict` when you can prove no overlap. Then re-run Case C/D after making `mask` all ones — the branch becomes predictable (Unit 07) and may suddenly vectorize or `cmov`.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-11`).

@@ -51,3 +51,7 @@ Your CPU’s predictor is very good. The demo needs a hard-to-predict pattern, n
 `TODO(unit-07)`: change the threshold from `128` to `250` (almost always false) on unsorted data.
 
 A rare-taken branch is predictable again. Unsorted should speed up toward the sorted case. Then try `2` (almost always true). Prediction cares about *pattern*, not “sortedness” itself.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-07`).

@@ -72,10 +72,11 @@ The starter (`starter/engine.hpp`) **starts as a copy of naive**. Your job is to
 ## Stretch goals
 
 - Two threads, SPSC, checksum still matches (Units 04, 10, 12, 14). Pin with `taskset -c 0,1`.
+- Shard symbols/instruments across cores or processes (Units 16, 17): one book per shard, mmap or SPSC in, no shared mutex map.
 - Per-order latency: after a warm book, time **one** aggressive order’s `on_order` with Unit 01 percentiles, not only the full replay.
 - Prove with `perf stat` that cache-misses dropped vs naive (Unit 03).
 
-Out of scope: DPDK, FPGA, multi-instrument sharding, fair lock-free MPMC. If you want those, you already have the vocabulary.
+Out of scope: DPDK, FPGA, fair lock-free MPMC, multi-rack RPC. If you want those, you already have the vocabulary.
 
 ## When you are stuck
 

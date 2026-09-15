@@ -45,3 +45,7 @@ Absolute numbers depend on the kernel tick and whether the two threads run on di
 `TODO(unit-14)`: in the spin waiter, insert `_mm_pause()` (x86) inside the loop.
 
 On SMT/HT this usually **improves** neighbor-thread performance without much hurting p50. Then raise `kHops` and compare CPU time (`time -p ./bin/14-spin-vs-sleep`). Spin wall-clock stays low; user-CPU stays high. Sleep is the opposite.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-14`).

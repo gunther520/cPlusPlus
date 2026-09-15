@@ -52,3 +52,7 @@ x86_64 always has SSE2. AVX (`ymm`) is optional; this unit stays on 128-bit so i
 `TODO(unit-15)`: unroll Case B to 8 floats per iteration (two `__m128` adds).
 
 If p50 drops, you were instruction-bound. If not, you were memory-bound (1M floats × 3 arrays ≈ 12 MiB — last-level cache / DRAM). That tells you whether to write more SIMD or to **touch less data**.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-15`).
