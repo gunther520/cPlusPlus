@@ -73,6 +73,7 @@ The starter (`starter/engine.hpp`) **starts as a copy of naive**. Your job is to
 
 - Two threads, SPSC, checksum still matches (Units 04, 10, 12, 14). Pin with `taskset -c 0,1`.
 - Shard symbols/instruments across cores or processes (Units 16, 17): one book per shard, mmap or SPSC in, no shared mutex map.
+- Runtime ISA / L1 tile for a *market-data* scan (Unit 18): one binary, `target("avx2")` plus `__builtin_cpu_supports`, not `-march=native`. Matching itself is usually pointer chasing, not a float add.
 - Per-order latency: after a warm book, time **one** aggressive order’s `on_order` with Unit 01 percentiles, not only the full replay.
 - Prove with `perf stat` that cache-misses dropped vs naive (Unit 03).
 
