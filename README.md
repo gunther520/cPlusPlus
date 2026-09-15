@@ -2,7 +2,7 @@
 
 A unit-based course for people who already write C++ (classes, templates, STL) and want to
 **measure and shape latency** on Linux: cache, allocations, branches, dispatch, atomics, SIMD,
-syscalls, wait policy, and a small SPSC ring — plus a **capstone matcher** you implement yourself.
+syscalls, wait policy, a small SPSC ring, and **runtime CPU/cache dispatch** — plus a **capstone matcher** you implement yourself.
 
 Each unit is a folder with:
 
@@ -75,6 +75,7 @@ Thread units (04, 10, 12, 14, 16) link `-pthread`. Unit 17 uses `fork` (no extra
 | 15 | [units/15-simd-intrinsics](units/15-simd-intrinsics) | Scalar add vs SSE2 `_mm_add_ps` vs auto-vec |
 | 16 | [units/16-shard-per-core](units/16-shard-per-core) | Mutex map vs shard-per-core (parallel without sharing) |
 | 17 | [units/17-ipc-shared-memory](units/17-ipc-shared-memory) | Unix `socketpair` vs mmap SPSC (two processes) |
+| 18 | [units/18-hw-adaptive](units/18-hw-adaptive) | Runtime ISA pick (SSE2/AVX2) vs scalar; L1-sized tiling |
 
 Each numbered unit has a lab: `make run-assign-NN` (see that folder’s `ASSIGNMENT.md`).
 
@@ -105,10 +106,11 @@ Compiler Explorer (https://godbolt.org/) with gcc `-O2` / `-O3 -march=native` is
 - One producer and one consumer can share a ring. Two producers cannot use the Unit 12 ring as-is.
 - Parallelism for latency is **sharding / pipelines**, not a bigger mutex (Unit 16).
 - Two processes on one box: prefer shared memory over sockets (Unit 17). A network hop is a different budget.
+- One binary, many CPUs: pick the kernel at **startup** (`__builtin_cpu_supports`, L1 from sysfs), not with `-march=native` (Unit 18).
 
 ## Out of scope (on purpose)
 
-Kernel bypass (DPDK), huge pages, NUMA pinning, MPI/Spark clusters, and a production multi-instrument matching engine. Units 16–17 are intra-host parallel/IPC, not wide-area distributed systems.
+Kernel bypass (DPDK), huge pages, NUMA pinning, MPI/Spark clusters, and a production multi-instrument matching engine. Units 16–17 are intra-host parallel/IPC, not wide-area distributed systems. Unit 18 is startup dispatch, not a hot-path autotuner.
 
 ## License / intent
 
