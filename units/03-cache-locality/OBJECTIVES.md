@@ -57,3 +57,7 @@ taskset -c 0 make run-03
 
 - At what `N` does the row/column gap explode? That is roughly “working set left the cache.”
 - At tiny `N`, both cases should look alike; you are measuring arithmetic, not memory.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-03`).

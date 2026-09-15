@@ -47,3 +47,7 @@ SSO buffer size is implementation-defined (often 15–23 bytes on libstdc++ 64-b
 
 - Where does Case A suddenly get much worse? That is the SSO → heap edge plus copy cost.
 - At `kLong == 8`, by-value vs view should be closer: you are copying a few bytes in registers / the string object, not a heap buffer.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-06`).

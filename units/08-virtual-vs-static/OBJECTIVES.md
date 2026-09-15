@@ -48,3 +48,7 @@ If the compiler *can* see a single concrete type, it may devirtualize. That is w
 `TODO(unit-08)`: fill the `Base*` array with **only** `TypeA` (comment out the `TypeB` stores).
 
 If Case A speeds up a lot, the compiler (or the CPU’s indirect predictor) is winning because the target is stable. Heterogeneous targets are the expensive case.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-08`).

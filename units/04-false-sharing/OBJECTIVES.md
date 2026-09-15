@@ -53,3 +53,7 @@ If the box has one core, the gap will be small — false sharing needs two cores
 
 - Do the two counters still share a line? Re-run.
 - Then try `alignas(64)` again. The experiment is the definition of a cache line.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-04`).

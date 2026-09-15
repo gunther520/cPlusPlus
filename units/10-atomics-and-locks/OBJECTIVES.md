@@ -54,3 +54,7 @@ g++ -std=c++17 -O1 -g -fsanitize=thread -Icommon \
 ```
 
 You may not always see a failure (x86 is strong), but the C++ model no longer guarantees the payload is visible. That is the lesson: **latency tricks that drop acquire/release are bugs, not optimizations.**
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-10`).

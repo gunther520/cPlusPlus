@@ -1,5 +1,5 @@
 # Convenience wrapper. Tutorial binaries live under units/; the assignment under capstone/.
-.PHONY: all clean help run-% unit-% capstone capstone-%
+.PHONY: all clean help run-% run-assign-% unit-% capstone capstone-%
 
 all:
 	$(MAKE) -C units all
@@ -17,6 +17,9 @@ unit-%:
 
 run-%:
 	$(MAKE) -C units run-$* OPT=$(OPT)
+
+run-assign-%:
+	$(MAKE) -C units run-assign-$* OPT=$(OPT)
 
 capstone:
 	$(MAKE) -C capstone all

@@ -80,3 +80,7 @@ In `compare.cpp`, find `TODO(unit-01)`. Change the inner trip count (`kWork`) by
 - Does p99/p50 stay similar, or does a fixed interrupt cost start to dominate at small `kWork`?
 
 That ratio tells you when a microbench is measuring your code versus measuring the timer itself.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-01`).

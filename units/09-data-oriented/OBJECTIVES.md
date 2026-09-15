@@ -51,3 +51,7 @@ Your earlier AVL tree in this repo was a great correctness exercise and a classi
 `TODO(unit-09)`: shrink `kN` to 64 (fits in L1) and re-run.
 
 The list should get closer to the vector: misses disappear. Then set `kN` back large. If the gap only exists at large N, you have isolated memory, not “instruction overhead of `next`.”
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-09`).

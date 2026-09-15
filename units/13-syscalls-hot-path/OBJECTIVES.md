@@ -52,3 +52,7 @@ Redirecting stdout (`./bin/13-syscalls-hot-path > /tmp/out`) can change Case A a
 `TODO(unit-13)`: in Case B, remove `s.reserve(...)`.
 
 p99 should jump (growth + copies, Unit 05). Then restore `reserve`, and try `s.push_back` of a binary `uint32_t` instead of decimal text. Formatting is often as expensive as the syscall.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-13`).

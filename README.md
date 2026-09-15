@@ -6,21 +6,22 @@ syscalls, wait policy, and a small SPSC ring — plus a **capstone matcher** you
 
 Each unit is a folder with:
 
-- `OBJECTIVES.md` — what to learn, what to predict, how to run, why it works, how people misread the numbers, and an exercise
-- `compare.cpp` — **Case A vs Case B** (sometimes C/D) in one binary, same data, same flags, p50/p99 printed
+- `OBJECTIVES.md` — what to learn, what to predict, how to run, why it works, how people misread the numbers
+- `compare.cpp` — **Case A vs Case B** in one binary, p50/p99 printed
+- `ASSIGNMENT.md` + `assignment.cpp` — a **~1 hour lab** (starter compiles; Case B is yours)
 
 There is no Boost and no Google Benchmark. A small harness in [`units/common/bench.hpp`](units/common/bench.hpp) is the whole timing library.
 
 ## How to learn (do this every unit)
 
 ```text
-read OBJECTIVES  →  write a prediction  →  run the binary  →  read Why  →  do the TODO
+read OBJECTIVES  →  run compare  →  read Why  →  1-hour lab (ASSIGNMENT.md)
 ```
 
-1. Read **Target** and **Predict**. Write guesses *before* you run. A number you predicted sticks.
-2. Run the unit (commands below). Look at **p50 and p99**, not only the mean. Mean hides stalls.
-3. Read **What you should see** and **Why**. If your machine disagrees in *shape* (who won), that is a bug in the lesson or a too-noisy box — pin a core and retry.
-4. Do the **Exercise** (`TODO(unit-XX)` in `compare.cpp`). Re-run. That is the actual practice.
+1. Read **Target** and **Predict**. Write guesses *before* you run.
+2. `make run-NN` and look at **p50 and p99**, not only the mean.
+3. Read **What you should see** and **Why**.
+4. Do the **~1 hour lab**: `make run-assign-NN`, edit `assignment.cpp`, fill the notes table in `ASSIGNMENT.md`.
 
 Keep a numbers log so later-you can compare machines:
 
@@ -42,14 +43,16 @@ make                 # all units, -O2
 make run-01          # build + run unit 01
 make run-02 OPT=0    # same source, no optimizer
 make run-02 OPT=3
+make run-assign-01   # ~1h lab for unit 01
+make assignments     # build every lab starter
 make clean
 ```
 
-From the repo root: `make run-03`, `make run-02 OPT=0`, etc.
+From the repo root: `make run-03`, `make run-assign-03`, `make run-02 OPT=0`, etc.
 
 Unit 02 and 08 **must** be compared at `-O0` and `-O2`. Run `make clean` between `OPT` values; the output name does not include the level.
 
-Thread units (04, 10, 12, 14) link `-pthread`. Capstone: `make -C capstone help`.
+Thread units (04, 10, 12, 14, 16) link `-pthread`. Unit 17 uses `fork` (no extra `-pthread`). Capstone: `make -C capstone help`.
 
 ## Unit map
 
@@ -70,10 +73,12 @@ Thread units (04, 10, 12, 14) link `-pthread`. Capstone: `make -C capstone help`
 | 13 | [units/13-syscalls-hot-path](units/13-syscalls-hot-path) | Unbuffered `write` vs in-memory log vs no I/O |
 | 14 | [units/14-spin-vs-sleep](units/14-spin-vs-sleep) | Busy spin vs `yield` vs `sleep_for` |
 | 15 | [units/15-simd-intrinsics](units/15-simd-intrinsics) | Scalar add vs SSE2 `_mm_add_ps` vs auto-vec |
+| 16 | [units/16-shard-per-core](units/16-shard-per-core) | Mutex map vs shard-per-core (parallel without sharing) |
+| 17 | [units/17-ipc-shared-memory](units/17-ipc-shared-memory) | Unix `socketpair` vs mmap SPSC (two processes) |
 
-**Capstone (assignment):** [capstone/ASSIGNMENT.md](capstone/ASSIGNMENT.md) — mini price-time matcher. Run `make -C capstone run-naive`, then edit `capstone/starter/engine.hpp`.
+Each numbered unit has a lab: `make run-assign-NN` (see that folder’s `ASSIGNMENT.md`).
 
-Do the numbered units in order. Later units reuse *cache line*, *p99*, *do_not_optimize*, and *allocate before the event*. The capstone is where they have to show up in one program.
+**Capstone (multi-hour project):** [capstone/ASSIGNMENT.md](capstone/ASSIGNMENT.md) — mini price-time matcher after the units.
 
 ## Optional Linux tools
 
@@ -98,10 +103,12 @@ Compiler Explorer (https://godbolt.org/) with gcc `-O2` / `-O3 -march=native` is
 - Predictable branches are cheap; unpredictable ones are not “never use `if`.”
 - `relaxed` is for counters. **Acquire/release is for messages.** Dropping that for speed is a bug.
 - One producer and one consumer can share a ring. Two producers cannot use the Unit 12 ring as-is.
+- Parallelism for latency is **sharding / pipelines**, not a bigger mutex (Unit 16).
+- Two processes on one box: prefer shared memory over sockets (Unit 17). A network hop is a different budget.
 
 ## Out of scope (on purpose)
 
-Kernel bypass (DPDK), huge pages, NUMA pinning, and a production multi-instrument matching engine. Units 13–15 and the capstone are the next rung, not the last.
+Kernel bypass (DPDK), huge pages, NUMA pinning, MPI/Spark clusters, and a production multi-instrument matching engine. Units 16–17 are intra-host parallel/IPC, not wide-area distributed systems.
 
 ## License / intent
 

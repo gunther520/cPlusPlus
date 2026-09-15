@@ -45,3 +45,7 @@ If p99 of Case A is only mildly worse, raise `kN` (exercise). Growth events are 
 `TODO(unit-05)`: in Case A, call `v.shrink_to_fit()` after `clear()` (uncomment the line).
 
 That *gives back* capacity so the next sample grows from empty again. p99 should get worse. Then replace it with `v.reserve(kN)` after `clear` and watch the tail calm down.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-05`).

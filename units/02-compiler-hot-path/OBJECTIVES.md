@@ -59,3 +59,7 @@ Or paste the functions into https://godbolt.org/ (g++, `-O2`).
 `TODO(unit-02)`: comment out `ll::do_not_optimize(sum)` inside `burn_live` and rebuild at `-O2`.
 
 If Case B now matches Case A, you have proved the harness, not the CPU, was keeping the work alive.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-02`).

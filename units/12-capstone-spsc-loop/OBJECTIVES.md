@@ -58,3 +58,7 @@ Then add a `std::string` payload (or a 64-byte struct) instead of `int`. Copy co
 ## Next
 
 Units 13–15 add syscalls, spin-vs-sleep, and SIMD intrinsics. The **hands-on project** is [capstone/ASSIGNMENT.md](../../capstone/ASSIGNMENT.md): a mini matcher that should reuse this ring.
+
+## Lab (~1 hour)
+
+Hands-on practice: [ASSIGNMENT.md](ASSIGNMENT.md) (`make run-assign-12`).
