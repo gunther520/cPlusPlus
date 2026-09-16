@@ -11,6 +11,7 @@ Each unit is a folder with:
 - `ASSIGNMENT.md` + `assignment.cpp` — a **~1 hour lab** (starter compiles; Case B is yours)
 
 There is no Boost and no Google Benchmark. A small harness in [`units/common/bench.hpp`](units/common/bench.hpp) is the whole timing library.
+Shared SPSC: [`units/common/spsc.hpp`](units/common/spsc.hpp). **Core vs optional:** [`TRACK.md`](TRACK.md). **Pipeline sketch:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## How to learn (do this every unit)
 
@@ -34,23 +35,24 @@ Absolute nanoseconds are not portable. **Ratios and percentile shape** are.
 
 ## Build and run
 
-Requires `g++` with C++17 and pthread (a normal Linux toolchain).
+Requires **g++** (tested 13.x) with C++17 and pthread on **Linux x86-64**. GCC attributes (`noinline`, `target("avx2")`, Itanium EH) are the course ABI, not portable ISO C++.
 
 ```bash
 cd units
 make help
-make                 # all units, -O2
-make run-01          # build + run unit 01
-make run-02 OPT=0    # same source, no optimizer
-make run-02 OPT=3
+make                 # all units, -O2 → bin/O2/
+make run-01          # build and run one lesson
+make run-02 OPT=0    # same source, no optimizer (separate bin/O0/)
 make run-assign-01   # ~1h lab for unit 01
 make assignments     # build every lab starter
-make clean
+make check           # Unit 12 payload oracle
 ```
 
-From the repo root: `make run-03`, `make run-assign-03`, `make run-02 OPT=0`, etc.
+From the repo root: `make run-03`, `make check` (units + capstone), `make tsan`.
 
-Unit 02 and 08 **must** be compared at `-O0` and `-O2`. Run `make clean` between `OPT` values; the output name does not include the level.
+Binaries land in `units/bin/O$(OPT)/` (and `capstone/bin/O$(OPT)/`), so **you do not need `make clean` to switch OPT**. Thread units pin with `taskset -c 0,1` when `PIN=1` (default). `PIN=0` to disable.
+
+Each run prints a `csv,unit,case,p50_ns,p99_ns,n` line (`tee -a numbers.csv`). If `n<50`, p99 is tagged `~max` — that is the worst sample, not a real percentile.
 
 Thread units (04, 10, 12, 14, 16) link `-pthread`. Unit 17 uses `fork` (no extra `-pthread`). Capstone: `make -C capstone help`.
 
@@ -69,7 +71,7 @@ Thread units (04, 10, 12, 14, 16) link `-pthread`. Unit 17 uses `fork` (no extra
 | 09 | [units/09-data-oriented](units/09-data-oriented) | Linked list vs `vector` of values |
 | 10 | [units/10-atomics-and-locks](units/10-atomics-and-locks) | Mutex vs atomic; relaxed vs seq_cst; acq/rel |
 | 11 | [units/11-vectorization](units/11-vectorization) | Aliasing / branches vs restrict + contiguous SIMD |
-| 12 | [units/12-capstone-spsc-loop](units/12-capstone-spsc-loop) | Locked `queue` vs SPSC ring buffer |
+| 12 | [units/12-spsc-ring](units/12-spsc-ring) | Unbounded mutex queue vs locked ring vs SPSC |
 | 13 | [units/13-syscalls-hot-path](units/13-syscalls-hot-path) | Unbuffered `write` vs in-memory log vs no I/O |
 | 14 | [units/14-spin-vs-sleep](units/14-spin-vs-sleep) | Busy spin vs `yield` vs `sleep_for` |
 | 15 | [units/15-simd-intrinsics](units/15-simd-intrinsics) | Scalar add vs SSE2 `_mm_add_ps` vs auto-vec |
@@ -90,13 +92,15 @@ Not required. Useful when you want the hardware’s opinion, not only wall time.
 
 ```bash
 # pin the process (and child threads of a make recipe: pin the binary)
-taskset -c 0 ./units/bin/01-measure-first
-taskset -c 0,1 ./units/bin/04-false-sharing
+taskset -c 0 ./units/bin/O2/01-measure-first
+taskset -c 0,1 ./units/bin/O2/04-false-sharing
 
-# cache and branches
+# cache and branches (or: make -C units perf-03)
 perf stat -e cache-misses,cache-references,branches,branch-misses \
-  ./units/bin/03-cache-locality
+  ./units/bin/O2/03-cache-locality
 ```
+
+Or: `make -C units perf-03`
 
 Compiler Explorer (https://godbolt.org/) with gcc `-O2` / `-O3 -march=native` is the fastest way to see whether Unit 02 inlined, Unit 08 stayed virtual, or Unit 11 emitted SIMD.
 

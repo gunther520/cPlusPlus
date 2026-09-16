@@ -1,4 +1,6 @@
 #include "bench.hpp"
+#include "expect.hpp"
+#include "spsc.hpp"
 
 #include <atomic>
 #include <cstdint>
@@ -34,36 +36,35 @@ struct LockedQueue {
   }
 };
 
-template <std::size_t Cap>
-struct SpscRing {
-  static_assert((Cap & (Cap - 1)) == 0, "capacity must be a power of two");
-
-  int slots[Cap]{};
-  alignas(64) std::atomic<std::size_t> write_pos{0};
-  alignas(64) std::atomic<std::size_t> read_pos{0};
+// Mutex only: pre-sized slots, no heap on the tick (isolates the lock from Unit 05).
+struct LockedRing {
+  std::mutex mu;
+  int slots[kCap]{};
+  std::size_t write_pos = 0;
+  std::size_t read_pos = 0;
 
   bool try_push(int v) {
-    auto w = write_pos.load(std::memory_order_relaxed);
-    auto r = read_pos.load(std::memory_order_acquire);
-    if (w - r >= Cap) {
+    std::lock_guard<std::mutex> g(mu);
+    if (write_pos - read_pos >= kCap) {
       return false;
     }
-    slots[w & (Cap - 1)] = v;
-    write_pos.store(w + 1, std::memory_order_release);
+    slots[write_pos & (kCap - 1)] = v;
+    ++write_pos;
     return true;
   }
 
   bool try_pop(int& v) {
-    auto r = read_pos.load(std::memory_order_relaxed);
-    auto w = write_pos.load(std::memory_order_acquire);
-    if (r == w) {
+    std::lock_guard<std::mutex> g(mu);
+    if (read_pos == write_pos) {
       return false;
     }
-    v = slots[r & (Cap - 1)];
-    read_pos.store(r + 1, std::memory_order_release);
+    v = slots[read_pos & (kCap - 1)];
+    ++read_pos;
     return true;
   }
 };
+
+using IntRing = SpscRing<int, kCap>;
 
 template <typename Q>
 static std::uint64_t pump(Q& q) {
@@ -94,26 +95,38 @@ static std::uint64_t pump(Q& q) {
 }
 
 int main() {
-  ll::print_header("Unit 12 — capstone SPSC vs locked queue");
+  ll::print_header("Unit 12 — SPSC ring vs locked queue");
   std::cout << "messages=" << kMessages << "  ring cap=" << kCap << "\n\n";
 
+  std::uint64_t const expect =
+      static_cast<std::uint64_t>(kMessages) * static_cast<std::uint64_t>(kMessages - 1) / 2;
+
   auto locked = ll::bench(
-      [] {
+      [&] {
         LockedQueue q;
-        pump(q);
+        ll::check_eq(pump(q), expect, "locked queue sum");
       },
       kSamples, kWarmup);
   ll::print_stats("case A (mutex + std::queue)", locked);
 
-  auto ring = ll::bench(
-      [] {
-        SpscRing<kCap> q;
-        pump(q);
+  auto bounded = ll::bench(
+      [&] {
+        LockedRing q;
+        ll::check_eq(pump(q), expect, "locked ring sum");
       },
       kSamples, kWarmup);
-  ll::print_stats("case B (SPSC ring buffer)", ring);
-  ll::print_speedup("locked queue", locked, "SPSC ring", ring);
+  ll::print_stats("case B (mutex + bounded ring)", bounded);
+  ll::print_speedup("unbounded queue", locked, "locked ring", bounded);
 
-  std::cout << "\nOne producer, one consumer, no heap on the tick.\n";
+  auto ring = ll::bench(
+      [&] {
+        IntRing q;
+        ll::check_eq(pump(q), expect, "spsc sum");
+      },
+      kSamples, kWarmup);
+  ll::print_stats("case C (SPSC ring)", ring);
+  ll::print_speedup("locked ring", bounded, "SPSC", ring);
+
+  std::cout << "\nOne producer, one consumer. Heap (A) vs lock (B) vs SPSC (C).\n";
   return 0;
 }

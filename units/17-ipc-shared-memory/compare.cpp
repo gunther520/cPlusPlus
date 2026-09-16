@@ -1,6 +1,6 @@
 #include "bench.hpp"
+#include "spsc.hpp"
 
-#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -19,31 +19,24 @@ constexpr std::size_t kCap = 1024;
 constexpr std::size_t kBytes = 8;
 // TODO(unit-17): set kBytes to 64 and watch socket vs shm.
 
-struct ShmRing {
-  alignas(64) std::atomic<std::size_t> write_pos{0};
-  alignas(64) std::atomic<std::size_t> read_pos{0};
-  alignas(64) char slots[kCap][64]{};
+struct IpcMsg {
+  char bytes[64]{};
 };
 
+using ShmRing = SpscRing<IpcMsg, kCap>;
+
 static bool ring_push(ShmRing* r, char const* src) {
-  auto w = r->write_pos.load(std::memory_order_relaxed);
-  auto rd = r->read_pos.load(std::memory_order_acquire);
-  if (w - rd >= kCap) {
-    return false;
-  }
-  std::memcpy(r->slots[w & (kCap - 1)], src, kBytes);
-  r->write_pos.store(w + 1, std::memory_order_release);
-  return true;
+  IpcMsg m{};
+  std::memcpy(m.bytes, src, kBytes);
+  return r->try_push(m);
 }
 
 static bool ring_pop(ShmRing* r, char* dst) {
-  auto rd = r->read_pos.load(std::memory_order_relaxed);
-  auto w = r->write_pos.load(std::memory_order_acquire);
-  if (rd == w) {
+  IpcMsg m{};
+  if (!r->try_pop(m)) {
     return false;
   }
-  std::memcpy(dst, r->slots[rd & (kCap - 1)], kBytes);
-  r->read_pos.store(rd + 1, std::memory_order_release);
+  std::memcpy(dst, m.bytes, kBytes);
   return true;
 }
 
@@ -139,6 +132,6 @@ int main() {
   ll::print_stats("case B (mmap SPSC ping-pong)", shm);
   ll::print_speedup("socket", sock, "shm ring", shm);
 
-  std::cout << "\nTwo processes, one box. A rack hop is a different sport.\n";
+  std::cout << "\nTwo processes, one box. Same SpscRing as Unit 12, in mmap.\n";
   return 0;
 }

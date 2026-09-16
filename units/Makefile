@@ -3,8 +3,9 @@ OPT      ?= 2
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -O$(OPT) -Icommon
 LDFLAGS  ?=
 PTHREAD  := -pthread
+PIN      ?= 1
 
-BIN_DIR  := bin
+BIN_DIR  := bin/O$(OPT)
 
 UNITS := \
   01-measure-first \
@@ -18,7 +19,7 @@ UNITS := \
   09-data-oriented \
   10-atomics-and-locks \
   11-vectorization \
-  12-capstone-spsc-loop \
+  12-spsc-ring \
   13-syscalls-hot-path \
   14-spin-vs-sleep \
   15-simd-intrinsics \
@@ -29,10 +30,12 @@ UNITS := \
   20-exceptions \
   21-latency-budget
 
-PTHREAD_UNITS := 04-false-sharing 10-atomics-and-locks 12-capstone-spsc-loop \
+PTHREAD_UNITS := 04-false-sharing 10-atomics-and-locks 12-spsc-ring \
   14-spin-vs-sleep 16-shard-per-core
 
-.PHONY: all assignments clean help \
+RUNNER := $(shell if [ "$(PIN)" != "0" ] && command -v taskset >/dev/null 2>&1 && [ "$$(nproc 2>/dev/null || echo 1)" -ge 2 ]; then echo "taskset -c 0,1"; fi)
+
+.PHONY: all assignments clean help check tsan perf-03 \
         unit-01 unit-02 unit-03 unit-04 unit-05 unit-06 \
         unit-07 unit-08 unit-09 unit-10 unit-11 unit-12 \
         unit-13 unit-14 unit-15 unit-16 unit-17 unit-18 \
@@ -64,34 +67,35 @@ assignments: \
   $(BIN_DIR)/assign-19 $(BIN_DIR)/assign-20 $(BIN_DIR)/assign-21
 
 help:
-	@echo "Low-latency C++ units"
-	@echo "  make                 build all compare.cpp units at -O$(OPT)"
-	@echo "  make unit-01         build one lesson"
-	@echo "  make run-01          build and run one lesson"
+	@echo "Low-latency C++ units  (see TRACK.md)"
+	@echo "  make                 build all compare.cpp at -O$(OPT) -> $(BIN_DIR)/"
+	@echo "  make run-01          build and run one lesson (PIN=1 uses taskset)"
+	@echo "  make run-02 OPT=0    same source, no optimizer (no clean needed)"
+	@echo "  make check           build all + run oracles (12, capstone via root)"
+	@echo "  make tsan            ThreadSanitizer on units 10 and 12"
+	@echo "  make perf-03         perf stat on cache locality"
 	@echo "  make assignments     build all ~1h labs"
-	@echo "  make run-assign-01   build and run Unit 01 lab"
-	@echo "  make run-02 OPT=0    same source, no optimizer"
-	@echo "  make clean           required after changing OPT"
+	@echo "  PIN=0 make run-04    disable taskset"
 
 $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
 
 define UNIT_RULES
-$(BIN_DIR)/$(1): $(1)/compare.cpp common/bench.hpp | $(BIN_DIR)
+$(BIN_DIR)/$(1): $(1)/compare.cpp common/bench.hpp common/spsc.hpp common/expect.hpp | $(BIN_DIR)
 	$$(CXX) $$(CXXFLAGS) $(if $(filter $(1),$(PTHREAD_UNITS)),$(PTHREAD),) $$< -o $$@ $(if $(filter $(1),$(PTHREAD_UNITS)),$(PTHREAD),)
 
 unit-$(2): $(BIN_DIR)/$(1)
 
 run-$(2): $(BIN_DIR)/$(1)
-	./$(BIN_DIR)/$(1)
+	$(RUNNER) ./$(BIN_DIR)/$(1)
 
-$(BIN_DIR)/assign-$(2): $(1)/assignment.cpp common/bench.hpp | $(BIN_DIR)
+$(BIN_DIR)/assign-$(2): $(1)/assignment.cpp common/bench.hpp common/spsc.hpp common/expect.hpp | $(BIN_DIR)
 	$$(CXX) $$(CXXFLAGS) $(if $(filter $(1),$(PTHREAD_UNITS)),$(PTHREAD),) $$< -o $$@ $(if $(filter $(1),$(PTHREAD_UNITS)),$(PTHREAD),)
 
 assign-$(2): $(BIN_DIR)/assign-$(2)
 
 run-assign-$(2): $(BIN_DIR)/assign-$(2)
-	./$(BIN_DIR)/assign-$(2)
+	$(RUNNER) ./$(BIN_DIR)/assign-$(2)
 endef
 
 $(eval $(call UNIT_RULES,01-measure-first,01))
@@ -105,7 +109,7 @@ $(eval $(call UNIT_RULES,08-virtual-vs-static,08))
 $(eval $(call UNIT_RULES,09-data-oriented,09))
 $(eval $(call UNIT_RULES,10-atomics-and-locks,10))
 $(eval $(call UNIT_RULES,11-vectorization,11))
-$(eval $(call UNIT_RULES,12-capstone-spsc-loop,12))
+$(eval $(call UNIT_RULES,12-spsc-ring,12))
 $(eval $(call UNIT_RULES,13-syscalls-hot-path,13))
 $(eval $(call UNIT_RULES,14-spin-vs-sleep,14))
 $(eval $(call UNIT_RULES,15-simd-intrinsics,15))
@@ -116,5 +120,23 @@ $(eval $(call UNIT_RULES,19-pages-tlb,19))
 $(eval $(call UNIT_RULES,20-exceptions,20))
 $(eval $(call UNIT_RULES,21-latency-budget,21))
 
+check: $(BIN_DIR)/12-spsc-ring $(BIN_DIR)/01-measure-first $(BIN_DIR)/20-exceptions
+	$(RUNNER) ./$(BIN_DIR)/12-spsc-ring >/tmp/u12.out
+	$(RUNNER) ./$(BIN_DIR)/20-exceptions >/tmp/u20.out
+	@echo "units check ok"
+
+tsan:
+	@mkdir -p bin
+	$(CXX) -std=c++17 -O1 -g -fsanitize=thread -Icommon $(PTHREAD) \
+	  10-atomics-and-locks/compare.cpp -o bin/u10-tsan $(PTHREAD)
+	$(CXX) -std=c++17 -O1 -g -fsanitize=thread -Icommon $(PTHREAD) \
+	  12-spsc-ring/compare.cpp -o bin/u12-tsan $(PTHREAD)
+	$(RUNNER) ./bin/u10-tsan
+	$(RUNNER) ./bin/u12-tsan
+
+perf-03: unit-03
+	@command -v perf >/dev/null 2>&1 || { echo "perf not installed (linux-tools)"; exit 1; }
+	perf stat -e cache-misses,dTLB-load-misses,branch-misses $(RUNNER) ./$(BIN_DIR)/03-cache-locality
+
 clean:
-	rm -rf $(BIN_DIR)
+	rm -rf bin

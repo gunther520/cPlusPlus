@@ -49,8 +49,9 @@ Then raise `kIters` and, if you can, run under ThreadSanitizer:
 
 ```bash
 g++ -std=c++17 -O1 -g -fsanitize=thread -Icommon \
-  10-atomics-and-locks/compare.cpp -pthread -o /tmp/u10-tsan
-/tmp/u10-tsan
+  10-atomics-and-locks/compare.cpp -pthread -o ../bin/u10-tsan
+../bin/u10-tsan
+# or: make tsan
 ```
 
 You may not always see a failure (x86 is strong), but the C++ model no longer guarantees the payload is visible. That is the lesson: **latency tricks that drop acquire/release are bugs, not optimizations.**

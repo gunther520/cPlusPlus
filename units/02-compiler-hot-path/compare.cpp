@@ -89,6 +89,7 @@ int main() {
   ll::print_stats("case D (always_inline add)", inline_stats);
   ll::print_speedup("noinline", noinline_stats, "always_inline", inline_stats);
 
-  std::cout << "\nRe-run with: make clean && make run-02 OPT=0  (then OPT=2)\n";
+  std::cout << "\nRe-run with: make run-02 OPT=0  then  make run-02 OPT=2\n";
+  std::cout << "(binaries are bin/O0/ vs bin/O2/; no clean required)\n";
   return 0;
 }

@@ -3,7 +3,7 @@
 ## Target
 
 - Measure **process-to-process** latency on one machine (the realistic “distributed” story in low-latency C++: gateway vs matcher, feeder vs book).
-- Compare `socketpair` ping-pong with a **shared-memory SPSC ring** (`mmap` `MAP_SHARED`).
+- Compare `socketpair` ping-pong with a **shared-memory SPSC ring** (`mmap` `MAP_SHARED`, the same `SpscRing` as Unit 12).
 - Know that **cross-machine** RTT is milliseconds (NIC, switch, kernel). Nothing in Units 01–16 will hide a 0.2 ms WAN hop. Colocate first; then kernel-bypass (DPDK) is a later course.
 
 ## Predict

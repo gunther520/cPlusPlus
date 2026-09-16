@@ -1,4 +1,6 @@
 #include "bench.hpp"
+#include "expect.hpp"
+#include "spsc.hpp"
 
 #include <atomic>
 #include <cstdint>
@@ -30,14 +32,15 @@ struct LockedQueue {
 };
 
 struct StudentRing {
-  // TODO: power-of-two slots, alignas(64) head/tail, try_push/try_pop like Unit 12.
+  // TODO: SpscRing<int, kCap> (see common/spsc.hpp). Not a mutex queue.
   LockedQueue inner;
   bool try_push(int v) { return inner.try_push(v); }
   bool try_pop(int& v) { return inner.try_pop(v); }
 };
 
 template <typename Q>
-static void pump(Q& q) {
+static std::uint64_t pump(Q& q) {
+  std::atomic<std::uint64_t> sum{0};
   std::thread prod([&] {
     for (int i = 0; i < kMessages; ++i) {
       while (!q.try_push(i)) {
@@ -45,35 +48,39 @@ static void pump(Q& q) {
     }
   });
   std::thread cons([&] {
+    std::uint64_t s = 0;
     int got = 0;
     int v = 0;
-    std::uint64_t s = 0;
     while (got < kMessages) {
       if (q.try_pop(v)) {
         s += static_cast<std::uint64_t>(v);
         ++got;
       }
     }
-    ll::do_not_optimize(s);
+    sum.store(s, std::memory_order_relaxed);
   });
   prod.join();
   cons.join();
+  return sum.load(std::memory_order_relaxed);
 }
 
 int main() {
   ll::print_header("Unit 12 lab");
+  std::uint64_t const expect =
+      static_cast<std::uint64_t>(kMessages) * static_cast<std::uint64_t>(kMessages - 1) / 2;
+
   auto locked = ll::bench(
-      [] {
+      [&] {
         LockedQueue q;
-        pump(q);
+        ll::check_eq(pump(q), expect, "locked sum");
       },
       12, 1);
   ll::print_stats("case A (mutex queue)", locked);
 
   auto ring = ll::bench(
-      [] {
+      [&] {
         StudentRing q;
-        pump(q);
+        ll::check_eq(pump(q), expect, "student ring sum");
       },
       12, 1);
   ll::print_stats("case B (TODO: SPSC)", ring);

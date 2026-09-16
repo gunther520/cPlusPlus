@@ -156,6 +156,8 @@ inline void print_ns(double ns) {
   }
 }
 
+inline char const* g_csv_unit = "";
+
 inline void print_stats(char const* name, Stats const& s) {
   std::cout << std::left << std::setw(36) << name << "  ";
   std::cout << "n=" << s.samples << "  min=";
@@ -164,11 +166,18 @@ inline void print_stats(char const* name, Stats const& s) {
   print_ns(s.p50_ns);
   std::cout << "  p99=";
   print_ns(s.p99_ns);
+  if (s.samples < 50) {
+    std::cout << "~max";
+  }
   std::cout << "  p99.9=";
   print_ns(s.p999_ns);
   std::cout << "  mean=";
   print_ns(s.mean_ns);
   std::cout << '\n';
+  // Notebook line: tee -a numbers.csv. p99 with n<50 is essentially max.
+  std::cout << "csv," << (g_csv_unit[0] ? g_csv_unit : "unit") << ",\"" << name
+            << "\"," << std::fixed << std::setprecision(1) << s.p50_ns << ','
+            << s.p99_ns << ',' << s.samples << '\n';
 }
 
 inline void print_speedup(char const* slow_name, Stats const& slow,
@@ -183,6 +192,7 @@ inline void print_speedup(char const* slow_name, Stats const& slow,
 }
 
 inline void print_header(char const* unit) {
+  g_csv_unit = unit;
   std::cout << "\n=== " << unit << " ===\n";
 #if defined(__OPTIMIZE__)
   std::cout << "compiled with optimization macros on (__OPTIMIZE__)\n";
