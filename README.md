@@ -2,7 +2,7 @@
 
 A unit-based course for people who already write C++ (classes, templates, STL) and want to
 **measure and shape latency** on Linux: cache, allocations, branches, dispatch, atomics, SIMD,
-syscalls, wait policy, a small SPSC ring, and **runtime CPU/cache dispatch** — plus a **capstone matcher** you implement yourself.
+syscalls, wait policy, a small SPSC ring, runtime CPU/cache dispatch, **pages/TLB**, **exceptions**, and a **measured latency budget** — plus a **capstone matcher** you implement yourself.
 
 Each unit is a folder with:
 
@@ -76,6 +76,9 @@ Thread units (04, 10, 12, 14, 16) link `-pthread`. Unit 17 uses `fork` (no extra
 | 16 | [units/16-shard-per-core](units/16-shard-per-core) | Mutex map vs shard-per-core (parallel without sharing) |
 | 17 | [units/17-ipc-shared-memory](units/17-ipc-shared-memory) | Unix `socketpair` vs mmap SPSC (two processes) |
 | 18 | [units/18-hw-adaptive](units/18-hw-adaptive) | Runtime ISA pick (SSE2/AVX2) vs scalar; L1-sized tiling |
+| 19 | [units/19-pages-tlb](units/19-pages-tlb) | First-touch vs prefault; cache-line vs page stride (TLB); THP |
+| 20 | [units/20-exceptions](units/20-exceptions) | Error codes vs `throw` (0% vs 1% fail) |
+| 21 | [units/21-latency-budget](units/21-latency-budget) | Dependent chase L1 vs LLC; hops that fit in 500 ns |
 
 Each numbered unit has a lab: `make run-assign-NN` (see that folder’s `ASSIGNMENT.md`).
 
@@ -107,10 +110,13 @@ Compiler Explorer (https://godbolt.org/) with gcc `-O2` / `-O3 -march=native` is
 - Parallelism for latency is **sharding / pipelines**, not a bigger mutex (Unit 16).
 - Two processes on one box: prefer shared memory over sockets (Unit 17). A network hop is a different budget.
 - One binary, many CPUs: pick the kernel at **startup** (`__builtin_cpu_supports`, L1 from sysfs), not with `-march=native` (Unit 18).
+- Anonymous `mmap` is address space. **Prefault** (and huge pages if you reserved them) before the tick (Unit 19).
+- Do not `throw` on the expected path. Return a code; unwind is p99 (Unit 20).
+- Budget **dependent** misses, not sequential SIMD adds (Unit 21).
 
 ## Out of scope (on purpose)
 
-Kernel bypass (DPDK), huge pages, NUMA pinning, MPI/Spark clusters, and a production multi-instrument matching engine. Units 16–17 are intra-host parallel/IPC, not wide-area distributed systems. Unit 18 is startup dispatch, not a hot-path autotuner.
+Kernel bypass (DPDK), NUMA pinning, MPI/Spark clusters, and a production multi-instrument matching engine. Units 16–17 are intra-host parallel/IPC, not wide-area distributed systems. Unit 18 is startup dispatch, not a hot-path autotuner. Unit 19 demos THP/`MAP_HUGETLB` when the kernel allows it — it does not reserve huge pages for you.
 
 ## License / intent
 

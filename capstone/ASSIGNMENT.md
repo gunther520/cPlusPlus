@@ -1,8 +1,8 @@
 # Capstone — Mini matching engine
 
-Apply Units 01–15 on one program: ingest orders, match buy vs sell, measure **p50/p99 of a full replay**.
+Apply the units on one program: ingest orders, match buy vs sell, measure **p50/p99 of a full replay**.
 
-This is the hands-on assignment. Units 01–15 taught the pieces. Here you assemble them.
+This is the hands-on assignment. The numbered units taught the pieces. Here you assemble them.
 
 ## What you are building
 
@@ -39,6 +39,7 @@ Copy the naive line into [RESULTS.md](RESULTS.md) before you change anything.
    - No mutex if there is only one matcher thread (Unit 10).
    - No virtual call per order (Unit 08) — templates/`on_order` on a concrete type is enough.
    - No `printf` / iostream inside `on_order` (Unit 13).
+   - No `throw` on a miss / partial fill (Unit 20). Prefault the book at startup (Unit 19).
 4. **Write-up.** Fill in `RESULTS.md`: naive vs yours, which units you used, one thing that did **not** help.
 
 ## Suggested attack order
@@ -74,6 +75,7 @@ The starter (`starter/engine.hpp`) **starts as a copy of naive**. Your job is to
 - Two threads, SPSC, checksum still matches (Units 04, 10, 12, 14). Pin with `taskset -c 0,1`.
 - Shard symbols/instruments across cores or processes (Units 16, 17): one book per shard, mmap or SPSC in, no shared mutex map.
 - Runtime ISA / L1 tile for a *market-data* scan (Unit 18): one binary, `target("avx2")` plus `__builtin_cpu_supports`, not `-march=native`. Matching itself is usually pointer chasing, not a float add.
+- Latency budget (Unit 21): after a warm book, count dependent hops in one aggressive `on_order` against a 500 ns software envelope.
 - Per-order latency: after a warm book, time **one** aggressive order’s `on_order` with Unit 01 percentiles, not only the full replay.
 - Prove with `perf stat` that cache-misses dropped vs naive (Unit 03).
 
