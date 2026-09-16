@@ -1,6 +1,7 @@
 #pragma once
 
 #include "order.hpp"
+#include "risk.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -17,6 +18,7 @@
 //   3. reserve/pool so on_order does not allocate (Unit 05).
 //   4. Track best bid / best ask; do not scan the whole book.
 //   5. Stretch: SpscOrderRing (common/spsc.hpp) + generator thread (Units 12, 14).
+//   6. Cancels: action==1 removes resting id (same as naive).
 
 class StudentEngine {
   struct Resting {
@@ -31,16 +33,30 @@ class StudentEngine {
   std::list<Resting> asks_;
   std::uint64_t filled_qty_ = 0;
   std::uint64_t checksum_ = 0;
+  Risk risk_{};
 
   void fill(std::uint32_t aggressor, Resting& rest, std::uint32_t qty) {
     filled_qty_ += qty;
-    checksum_ ^= mix_fill(aggressor, rest.id, qty);
+    checksum_ ^= mix_fill(aggressor, rest.id, rest.price, qty);
     rest.qty -= qty;
+  }
+
+  void cancel(std::uint32_t id) {
+    auto pred = [id](Resting const& r) { return r.id == id; };
+    bids_.remove_if(pred);
+    asks_.remove_if(pred);
   }
 
  public:
   void on_order(Order o) {
     std::lock_guard<std::mutex> g(mu_);
+    if (!risk_.allow(o)) {
+      return;
+    }
+    if (o.action == 1) {
+      cancel(o.id);
+      return;
+    }
     if (o.side == 0) {
       while (o.qty > 0) {
         auto best = asks_.end();

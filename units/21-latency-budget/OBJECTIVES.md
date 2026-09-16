@@ -29,7 +29,7 @@ The binary prints ns/hop and `hops that fit in 500 ns`. Copy them into the table
 - Larger working set: ns/hop climbs (L2, then LLC/DRAM). On a VM the “DRAM” number may still be fat L3 — trust the printout, not the label.
 - 500 ns / (64 MiB hop) is a **small integer**. That is why Unit 09 kills lists and why the capstone wants a flat book.
 
-Order-of-magnitude **if you have no measurement yet** (4 GHz-ish x86):
+Order-of-magnitude **if you have no measurement yet** (folklore, 4 GHz-ish x86 — **not this VM**):
 
 | Event | Ballpark |
 |-------|----------|
@@ -52,6 +52,7 @@ Order-of-magnitude **if you have no measurement yet** (4 GHz-ish x86):
 ## Wrong conclusions
 
 - Using Unit 15’s streaming add as “memory is 0.5 ns/float” in a budget for a pointer-rich matcher. Different access pattern, different stall.
+- Mixing a brochure “1 µs NIC” into a budget you measured only in-process ([docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)).
 - Treating the table above as exact on a hypervisor. Case C here is often L3, not DIMM.
 - Spending the budget on DPDK before the software path still does a `std::map` per order (Units 05, 09). Measure the process first.
 

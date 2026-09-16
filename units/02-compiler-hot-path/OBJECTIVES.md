@@ -25,7 +25,7 @@ make clean
 make run-02 OPT=3
 ```
 
-`make clean` matters: the binary name does not include `OPT`, so a stale `-O2` build would be reused.
+`make clean` is no longer required when changing `OPT`: binaries live in `bin/O0/` vs `bin/O2/`.
 
 Optional: dump the hot loop.
 

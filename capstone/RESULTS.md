@@ -1,17 +1,19 @@
 # Capstone results log
 
-Fill this in as you work. Absolute ns are machine-local; **ratios and checksum** travel.
+Absolute ns are machine-local; **ratios and checksum** travel.
 
-Workload: `kOrders` from `common/workload.hpp`, `-O2`.
+Default tape: `LL_TAPE=uniform` (or unset). Also run `cancels`.
 
-| Build | fills_qty | checksum | resting | p50 | p99 | notes |
-|-------|-----------|----------|---------|-----|-----|-------|
-| naive |  |  |  |  |  |  |
-| starter (first run) |  |  |  |  |  |  |
-| starter (best) |  |  |  |  |  |  |
-| reference (optional) |  |  |  |  |  |  |
+| Build | tape | fills_qty | checksum | resting | tape p50 | per-order p50 | notes |
+|-------|------|-----------|----------|---------|----------|---------------|-------|
+| naive | uniform |  |  |  |  |  |  |
+| naive | cancels |  |  |  |  |  |  |
+| starter (first) | uniform |  |  |  |  |  |  |
+| starter (best) | uniform |  |  |  |  |  |  |
+| starter | cancels |  |  |  |  |  |  |
+| reference | uniform |  |  |  |  |  | optional |
 
-Checksum of starter **must** equal naive.
+Starter checksum **must** equal naive on that tape. Prefer **per-order** p50 when you talk about the tick.
 
 ## Units I actually used
 
